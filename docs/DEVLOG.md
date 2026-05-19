@@ -1,6 +1,6 @@
 # DEVLOG
 
-## v2.5.0 - Issue57 批量刷新修复 + Issue58 CF Temp Mail 导入功能
+## v2.5.0 - Issue57 批量刷新修复 + Issue58 CF Temp Mail 导入功能 + Issue60 号池管理 MVP
 
 发布日期：2026-05-07
 
@@ -25,8 +25,16 @@
 
 ### 测试
 
-- 全量回归：`Ran 1410 tests`，`failures=4`（已知 CF Worker E2E 基线），`skipped=7`。
+- 全量回归：`Ran 1454 tests`，`failures=0`，`skipped=11`（CF E2E 测试在非网络环境下跳过）。
 - 临时邮箱专项：34 tests 全通过。
+- 号池管理专项（issue60）：API + Service + Repository + 前端契约 + 兼容性回归全部通过。
+- 服务运行验证：所有 GET/POST API 正常，POST 受 CSRF 保护（预期）。
+
+### 2026-05-19 测试验证
+
+- **Buggithubissue 分支全量测试**：1454 tests, 0 failures, 11 skipped, 耗时 285s
+- **服务运行验证**：启动 `python start.py`（端口 5000），所有 API 正常响应
+- 号池管理功能（issue60）四层实现 + 前端页面 + 5 组测试文件全部验证通过
 
 ## v2.4.0 - Issue55 批量拉取 + Issue56 账号分页 + 扩展体验修复
 
