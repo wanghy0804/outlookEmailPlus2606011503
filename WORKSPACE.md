@@ -22,6 +22,9 @@
 3. **README.en.md**：同上（英文版）
 4. **CHANGELOG.md**：`[Unreleased]` 下记录本次修复
 
+**Commit**：`0cc9ebf` — `fix(docker): pin watchtower to v1.7.1, prevent stale image API errors (closes #65)`
+**Issue 回复**：https://github.com/ZeroPointSix/outlookEmailPlus/issues/65#issuecomment-4485782908
+
 **是否改动代码**：否（仅配置文件和文档）
 
 ---
