@@ -1,5 +1,42 @@
 # DEVLOG
 
+## v2.6.0 - Issue60 号池管理 MVP + i18n 完善
+
+发布日期：2026-05-19
+
+### 新增功能
+
+- **Issue #60 号池管理 UI 与状态维护 MVP**：
+  - 新增独立查询接口 `GET /api/pool-admin/accounts`（支持池内/池外/分组/状态/provider/搜索筛选 + 分页）
+  - 新增单条动作接口 `POST /api/pool-admin/accounts/<id>/action`（移入/移出号池、冻结/恢复/退休/强制释放）
+  - claimed 状态保护：占用中的账号拒绝一切普通操作，仅允许 force_release
+  - 前端页面：筛选栏紧凑排列、分页省略号折叠、行内操作文字链接、批量选择/操作、空数据弱化显示
+  - 四层架构：routes/pool_admin → controllers/pool_admin → services/pool_admin → repositories/pool_admin
+
+### 修复
+
+- **号池管理 i18n 翻译补全**：修复英文模式下中英混搭问题
+  - 新增 29 个精确翻译条目 + 6 个 regex pattern 翻译规则
+  - 将分片拼接改为整句翻译以支持中英语序差异（如 "已选 20 条" → "20 selected"）
+  - 补全 5 个带 emoji 的卡片标题翻译（🎱号池管理等）
+
+### 重要变更
+
+- 版本号从 `2.5.0` 升级至 `2.6.0`。
+- 新增 Pool Admin 四层模块（routes/controllers/services/repositories）。
+- `static/js/features/pool_admin.js` — 号池管理前端模块。
+- `static/css/main.css` — 新增 `.data-table--pool-admin` 表格增强样式。
+- `i18n.js` 英文字典扩充至覆盖号池管理所有 UI 文本。
+
+### 测试/验证
+
+- 全量回归：`Ran 1454 tests in 285s`，`failures=0`，`skipped=11`
+- 号池管理专项：API + Service + Repository + 前端契约 + 兼容性回归 全部通过
+- 服务运行验证：所有 GET/POST API 正常响应
+- 本地服务人工验收通过
+
+---
+
 ## v2.5.0 - Issue57 批量刷新修复 + Issue58 CF Temp Mail 导入功能 + Issue60 号池管理 MVP
 
 发布日期：2026-05-07
