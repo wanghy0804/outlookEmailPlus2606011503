@@ -4,6 +4,127 @@
 
 ---
 
+## 2026-05-29
+
+### 操作记录
+
+#### 290. Issue #70 — Figma 邮件内容无法显示 Bug 修复
+
+**时间**：2026-05-29
+
+**操作背景**：
+用户报告 Issue #70 — Figma 发来的邮件（重置密码、登录验证等）只能看到邮件头，正文空白。导致无法获取验证码，无法完成密码重置等操作。
+
+**根因分析**：
+用户 ikxd 在 Issue #70 中提供了关键分析：
+> "我用脚本直接读取邮件，发现内容也是空的，AI解释：最大概率是邮件 plain part 被解析成空字符串（Figma 经常 plain 段几乎为空，正文都在 HTML 里），所以应该是解析的问题。"
+
+**真正的问题根因**：
+在 `outlook_web/services/imap.py` 第 52-83 行，`get_email_body()` 函数的逻辑有缺陷：
+1. 找到 `text/plain` 就立即 `break` 返回
+2. 如果 Figma 邮件的 `text/plain` 部分为空或很短，就会返回空字符串
+3. 即使 `text/html` 部分有完整内容，也不会被使用
+
+**修复方案**：
+1. 修改 `get_email_body()` 函数：
+   - 同时提取 `text/plain` 和 `text/html`
+   - 如果 `text/plain` 太短（<20字符），回退到 `text/html`
+   - 参考用户 ikxd 的脚本逻辑：`body = plain_text if len(plain_text) >= 20 else (html_text or plain_text)`
+
+2. 新增 `get_email_body_and_type()` 函数：
+   - 返回 `(body, body_type)` 元组
+   - 用于需要区分 HTML/Text 的场景
+
+3. 修改 `get_email_detail_imap_with_server()` 函数：
+   - 使用 `get_email_body_and_type()` 替代 `get_email_body()`
+   - 返回 `body_type` 字段
+
+**修改文件清单**：
+
+| 文件 | 改动内容 |
+|------|----------|
+| `outlook_web/services/imap.py` | 修复邮件解析逻辑，新增 `get_email_body_and_type()` 函数 |
+| `static/js/features/emails.js` | DOMPurify 配置：允许 `<style>` 标签（之前的修复） |
+
+**文档产出**：
+- 更新 `docs/BUG/2026-05-29-Issue70-Figma邮件内容无法显示.md`（更新根因分析）
+
+**是否修改业务代码**：是（后端邮件解析逻辑 + 前端 DOMPurify 配置）
+
+**是否启动/停止服务**：否
+
+**现场状态**：
+- 代码修改已完成
+- 文档已回填（BUG / WORKSPACE）
+- 全量测试已通过（1529 tests, 4 failures, 7 skipped）
+- 4 个失败全部来自 `RealCFWorkerE2ETests`（CF Worker 外部环境依赖，已知基线）
+- 0 新增失败
+
+---
+
+#### 290B. Issue #70 — 全量测试验证
+
+**时间**：2026-05-29
+
+**操作背景**：
+代码修改完成后，用户要求运行全量测试验证。
+
+**执行过程**：
+- 后台启动测试：`python -m unittest discover -s tests -v`（PID: 11360）
+- 测试输出文件：`C:\Users\PLA30\AppData\Local\Temp\opencode\test_output.txt`
+- 测试错误文件：`C:\Users\PLA30\AppData\Local\Temp\opencode\test_error.txt`
+
+**测试结果**：
+```
+Ran 1529 tests in 295.991s
+FAILED (failures=4, skipped=7)
+```
+
+**失败分析**：
+4 个失败全部来自 `RealCFWorkerE2ETests`（CF Worker 真实 E2E 外部环境依赖）：
+- `test_03_claim_complete_deletes_remote_mailbox` — 500 != 200
+- `test_04_claim_complete_timeout_skips_delete` — 500 != 200
+- 与本次修改无关，属于已知基线问题
+
+**结论**：
+- ✅ 1529 个测试全部执行
+- ✅ 0 新增失败
+- ✅ 4 个已知失败（CF Worker E2E 外部依赖）
+- ✅ 7 个跳过（deprecated/cf e2e config）
+
+**是否修改业务代码**：否（本轮为测试验证）
+
+**是否启动/停止服务**：否
+
+---
+
+#### 290C. Issue #70 — 人工验收通过
+
+**时间**：2026-05-29
+
+**操作背景**：
+用户启动服务进行人工验收，验证 Figma 邮件内容是否正常显示。
+
+**验收结果**：
+✅ **验收通过** — 用户确认"可以修复成功了"
+
+**验证内容**：
+1. Figma 邮件内容正常显示
+2. 重置密码邮件可以正常查看
+3. 验证码可以正常提取
+
+**最终状态**：
+- Issue #70 修复完成
+- 全量测试通过（0 新增失败）
+- 人工验收通过
+- 文档已回填（BUG / WORKSPACE）
+
+**是否修改业务代码**：否（本轮为验收）
+
+**是否启动/停止服务**：是（启动服务供验收，待用户停止）
+
+---
+
 ## 2026-05-22
 
 ### 操作记录
